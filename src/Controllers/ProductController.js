@@ -4,20 +4,27 @@ import { ProductSendo } from "../Models/ProductModel.js"
 const SetQuery = (obj) => {
     let output = {...obj}
 
-    if(Number(obj.gtprice) < 0){
+    obj.ltprice = Number(obj.ltprice)
+    obj.gtprice = Number(obj.gtprice)
+
+    if(obj.gtprice < 0){
         delete output.levelPrice 
 
         output.sale_price_min = {$lt: obj.ltprice}
     }
 
-    if(Number(obj.gtprice) > 0 && !obj.ltprice){
+    if(obj.gtprice > 0 && !obj.ltprice){
         delete output.levelPrice 
 
         output.sale_price_min = { $gt: obj.gtprice}
     }
 
-    if(Number( obj.gtprice) > 0  && Number(obj.ltprice)  > 0 && Number(obj.ltprice)  > Number( obj.gtprice)){
-        output.sale_price_min = { $gt: Number( obj.gtprice),$lt:  Number(obj.ltprice)}
+    if( obj.gtprice > 0  && obj.ltprice  > 0 && obj.ltprice  >  obj.gtprice){
+        output.sale_price_min = { $gt: obj.gtprice, $lt: obj.ltprice}
+    }
+
+    if(obj.has_video){
+        output.has_video = {$ne : JSON.parse(obj.has_video)} 
     }
     
     return output
@@ -38,9 +45,12 @@ export const GetProduct = async(req,res,next) => {
         }
 
         const Products = await ProductSendo.find(SetQuery(query)).skip(count).limit(limit*30)
+
         res.json({Products,Length : Products.length})
 
     } catch (error) {
         next(error)
     }
 }
+
+
